@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wedding Photo Upload</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        .upload-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        label {
+            display: block;
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        input[type="text"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="upload-container">
+        <h1>Upload Your Wedding Photos</h1>
+        <form id="upload-form">
+            <input type="text" id="album-name" name="name" placeholder="Enter album name" required>
+            <input type="file" id="file-input" name="file" multiple accept="image/*">
+            <label for="file-input">Choose Photos</label>
+            <button type="submit" disabled>Upload</button>
+        </form>
+    </div>
+
+    <script>
+        const form = document.getElementById('upload-form');
+        const fileInput = document.getElementById('file-input');
+        const submitButton = form.querySelector('button');
+        const albumNameInput = document.getElementById('album-name');
+
+        fileInput.addEventListener('change', () => {
+            submitButton.disabled = !fileInput.files.length;
+        });
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const files = fileInput.files;
+            const albumName = albumNameInput.value.trim();
+            if (!files.length || !albumName) return;
+
+            const formData = new FormData();
+            for (const file of files) {
+                formData.append('files', file);
+            }
+            formData.append('name', albumName);
+
+            submitButton.disabled = true;
+
+            try {
+                const response = await fetch('http://localhost:8000/upload', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (response.ok) {
+                    alert('Photos uploaded successfully!');
+                    fileInput.value = '';
+                    albumNameInput.value = '';
+                    submitButton.disabled = true;
+                } else {
+                    const result = await response.json();
+                    alert(result.detail || 'Failed to upload photos.');
+                }
+            } catch (error) {
+                alert('An error occurred while uploading photos.');
+            } finally {
+                submitButton.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
